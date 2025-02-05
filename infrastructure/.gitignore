@@ -1,0 +1,5 @@
+cdk.out/
+node_modules/
+
+cognito-outputs.json
+docs-stack-outputs.json

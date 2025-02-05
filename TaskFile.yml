@@ -1,0 +1,64 @@
+version: "3"
+
+env:
+  AWS_PROFILE:
+    sh: echo $AWS_PROFILE
+  CLOUDFRONT_URL:
+    sh: echo ${CLOUDFRONT_URL:-https://dummy.example.com/}
+
+
+tasks:
+  default:
+    desc: task -> show commands
+    cmds:
+      - task -l --sort none
+
+  update-docs-local:
+    desc: task update-docs-local -> generate dbt docs locally
+    dir: dbt-sample/dbt_project
+    cmds:
+      - uv run dbt docs generate
+
+  upload-docs-for-hosted-site:
+    desc: task update-docs-for-hosted-site -> generate dbt docs for hosted site
+    dir: dbt-sample/dbt_project
+    requires:
+      vars:
+        - AWS_PROFILE
+    cmds:
+      - test -f ../../infrastructure/docs-stack-outputs.json || { echo "Error ../../infrastructure/docs-stack-outputs.json file not found"; exit 1; }
+      - aws s3 cp ./target/index.html s3://$(jq -r '.DocsStack.DocsBucketName' ../../infrastructure/docs-stack-outputs.json) --profile={{ .AWS_PROFILE }}
+      - aws s3 cp ./target/manifest.json s3://$(jq -r '.DocsStack.DocsBucketName' ../../infrastructure/docs-stack-outputs.json) --profile={{ .AWS_PROFILE }}
+      - aws s3 cp ./target/catalog.json s3://$(jq -r '.DocsStack.DocsBucketName' ../../infrastructure/docs-stack-outputs.json) --profile={{ .AWS_PROFILE }}
+      # dbtのドキュメントに画像ファイル等がある場合は以下のコメントを解除
+      # - aws s3 cp ./target/assets s3://$(jq -r '.DocsStack.DocsBucketName' ../../infrastructure/docs-stack-outputs.json)/assets --profile={{ .AWS_PROFILE }} --recursive
+      # ドキュメントサイトのキャッシュを無効化（即時更新のために入れているが、更新が即時反映されなくても良い場合は不要）
+      - aws cloudfront create-invalidation --distribution-id $(jq -r '.DocsStack.DistributionId' ../../infrastructure/docs-stack-outputs.json) --paths "/*" --profile {{ .AWS_PROFILE }}
+      - echo "Updated hosted docs"
+
+  update-dbt-docs:
+    desc: task update-dbt-docs -> update dbt docs
+    cmds:
+      - task: update-docs-local
+      - echo "Updated dbt local docs"
+      - task: upload-docs-for-hosted-site
+      - echo "Updated hosted docs"
+
+  deploy-cognito:
+    desc: Deploy Cognito stack first and save output (JSON file is saved to a gitignored location)
+    dir: infrastructure
+    cmds:
+      - npx cdk deploy -O lambda/auth/cognito-outputs.json CognitoStack
+
+  deploy-docs:
+    desc: Deploy CloudFront & Lambda@edge (DocsStack) using saved Cognito outputs
+    dir: infrastructure
+    cmds:
+      - CLOUDFRONT_URL=$CLOUDFRONT_URL npx cdk deploy DocsStack
+
+  deploy-all:
+    desc: Deploy all stacks in order; Cognito, Docs, and UpdateCognitoOAuth
+    cmds:
+      - task: deploy-cognito
+      - task: deploy-docs
+      - echo "Deployed all stacks successfully"
