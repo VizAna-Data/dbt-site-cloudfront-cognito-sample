@@ -32,7 +32,7 @@ flowchart LR
         U["ユーザー"]
     end
 
-    U -- "HTTPリクエスト" --> CF
+    U -- "リクエスト" --> CF
     CF -- "認証トリガー" --> LE
     LE -- "認証処理" --> COG
     COG -- "認証成功" --> CF
