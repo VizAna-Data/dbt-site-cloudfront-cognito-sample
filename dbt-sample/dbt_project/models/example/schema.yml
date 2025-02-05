@@ -6,14 +6,14 @@ models:
     description: "NYCタクシートリップのデータ（モデル）。ピックアップ日時、ドロップオフ日時、乗車距離、運賃、ピックアップZIP、ドロップオフZIPを含む。"
     columns:
       - name: tpep_pickup_datetime
-        description: "ピックアップ日時 (timestamp)"
+        description: "ピックアップ日時"
       - name: tpep_dropoff_datetime
-        description: "ドロップオフ日時 (timestamp)"
+        description: "ドロップオフ日時"
       - name: trip_distance
-        description: "乗車距離 (double)"
+        description: "乗車距離"
       - name: fare_amount
-        description: "運賃 (double)"
+        description: "運賃"
       - name: pickup_zip
-        description: "ピックアップZIPコード (integer)"
+        description: "ピックアップZIPコード"
       - name: dropoff_zip
-        description: "ドロップオフZIPコード (integer)"
+        description: "ドロップオフZIPコード"
