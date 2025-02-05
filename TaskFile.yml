@@ -34,7 +34,6 @@ tasks:
       # - aws s3 cp ./target/assets s3://$(jq -r '.DocsStack.DocsBucketName' ../../infrastructure/docs-stack-outputs.json)/assets --profile={{ .AWS_PROFILE }} --recursive
       # ドキュメントサイトのキャッシュを無効化（即時更新のために入れているが、更新が即時反映されなくても良い場合は不要）
       - aws cloudfront create-invalidation --distribution-id $(jq -r '.DocsStack.DistributionId' ../../infrastructure/docs-stack-outputs.json) --paths "/*" --profile {{ .AWS_PROFILE }}
-      - echo "Updated hosted docs"
 
   update-dbt-docs:
     desc: task update-dbt-docs -> update dbt docs
@@ -54,7 +53,7 @@ tasks:
     desc: Deploy CloudFront & Lambda@edge (DocsStack) using saved Cognito outputs
     dir: infrastructure
     cmds:
-      - CLOUDFRONT_URL=$CLOUDFRONT_URL npx cdk deploy DocsStack
+      - CLOUDFRONT_URL=$CLOUDFRONT_URL npx cdk deploy -O docs-stack-outputs.json DocsStack
 
   deploy-all:
     desc: Deploy all stacks in order; Cognito, Docs, and UpdateCognitoOAuth
