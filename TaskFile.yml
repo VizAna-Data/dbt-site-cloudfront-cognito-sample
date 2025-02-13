@@ -56,8 +56,27 @@ tasks:
       - CLOUDFRONT_URL=$CLOUDFRONT_URL npx cdk deploy -O docs-stack-outputs.json DocsStack
 
   deploy-all:
-    desc: Deploy all stacks in order; Cognito, Docs, and UpdateCognitoOAuth
+    desc: Deploy all stacks in order; Cognito, Docs
     cmds:
       - task: deploy-cognito
       - task: deploy-docs
       - echo "Deployed all stacks successfully"
+
+  destroy-cognito:
+    desc: Destroy Cognito stack
+    dir: infrastructure
+    cmds:
+      - npx cdk destroy CognitoStack
+
+  destroy-docs:
+    desc: Destroy Docs stack
+    dir: infrastructure
+    cmds:
+      - npx cdk destroy DocsStack
+
+  destroy-all:
+    desc: Destroy all stacks
+    cmds:
+      - task: destroy-cognito
+      - task: destroy-docs
+      - echo "Destroyed all stacks successfully"
